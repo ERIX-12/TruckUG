@@ -1,0 +1,44 @@
+services:
+  db:
+    image: timescale/timescaledb-ha:pg16
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+  redis:
+    image: redis:7-alpine
+    volumes:
+      - redisdata:/data
+  minio:
+    image: minio/minio
+    command: server /data --console-address ":9001"
+  migrate:
+    build: ./db
+    depends_on:
+      - db
+  core-api:
+    build: ./services/core-api
+    depends_on:
+      - db
+      - redis
+  ingestion:
+    build: ./services/ingestion-gateway
+    depends_on:
+      - redis
+  workers:
+    build: ./services/stream-workers
+    depends_on:
+      - redis
+  notifier:
+    build: ./services/notifier
+    depends_on:
+      - redis
+  web:
+    build: ./apps/web-dashboard
+    ports:
+      - "3000:3000"
+  simulator:
+    build: ./simulator
+    profiles: ["demo"]
+
+volumes:
+  pgdata:
+  redisdata:

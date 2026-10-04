@@ -1,0 +1,6 @@
+{
+  "name": "TrackUG - Uganda Vehicle Tracking & ANPR Innovation Platform",
+  "description": "Vehicle tracking, ANPR plate recognition, geofencing, and rapid stolen vehicle recovery platform for Uganda.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
