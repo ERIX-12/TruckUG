@@ -81,10 +81,23 @@ export const VehicleDetailDrawer: React.FC<VehicleDetailDrawerProps> = ({
   return (
     <div className="w-full lg:w-[420px] bg-white dark:bg-[#181C25] border-l border-gray-200 dark:border-[#2B313D] flex flex-col h-full shadow-2xl z-30 select-none overflow-hidden text-gray-900 dark:text-gray-100">
       {/* Header */}
-      <div className="p-4 border-b border-gray-200 dark:border-[#2B313D] flex items-center justify-between bg-gray-50/70 dark:bg-[#13161D]">
-        <div className="flex items-center gap-2.5">
+        <div className="p-4 border-b border-gray-200 dark:border-[#2B313D] flex items-center justify-between bg-gray-50/70 dark:bg-[#13161D]">
+        <div className="flex items-center gap-2">
           <PlateTag plate={vehicle.plate} size="lg" />
           <StatusPill status={vehicle.status} />
+          {vehicle.category && (
+            <span
+              className={`text-[10px] font-bold uppercase px-2 py-0.5 rounded-full ${
+                vehicle.category === 'commercial'
+                  ? 'bg-amber-100 dark:bg-amber-950/70 text-amber-800 dark:text-amber-300 border border-amber-300 dark:border-amber-800'
+                  : vehicle.category === 'public'
+                  ? 'bg-emerald-100 dark:bg-emerald-950/70 text-emerald-800 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-800'
+                  : 'bg-blue-100 dark:bg-blue-950/70 text-blue-800 dark:text-blue-300 border border-blue-300 dark:border-blue-800'
+              }`}
+            >
+              {vehicle.category}
+            </span>
+          )}
         </div>
         <div className="flex items-center gap-1">
           <button
@@ -378,12 +391,28 @@ export const VehicleDetailDrawer: React.FC<VehicleDetailDrawerProps> = ({
           <div className="space-y-3 text-xs font-mono">
             <div className="p-3 rounded-lg border bg-gray-50 dark:bg-[#13161D] border-gray-200 dark:border-gray-800 space-y-2">
               <div className="flex justify-between">
+                <span className="text-gray-500">Category:</span>
+                <span className="font-bold uppercase text-blue-600 dark:text-blue-400">
+                  {vehicle.category || 'private'}
+                </span>
+              </div>
+              <div className="flex justify-between">
                 <span className="text-gray-500">Owner Name:</span>
                 <span className="font-bold">{vehicle.ownerName}</span>
               </div>
+              {vehicle.orgId && (
+                <div className="flex justify-between">
+                  <span className="text-gray-500">Organization:</span>
+                  <span className="font-semibold uppercase">{vehicle.orgId}</span>
+                </div>
+              )}
               <div className="flex justify-between">
                 <span className="text-gray-500">Contact:</span>
                 <span>{vehicle.ownerPhone}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-gray-500">Tracker IMEI:</span>
+                <span>{vehicle.deviceImei}</span>
               </div>
               <div className="flex justify-between">
                 <span className="text-gray-500">Registered:</span>

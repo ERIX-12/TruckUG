@@ -8,7 +8,11 @@ export function filterVehiclesByRole(vehicles: Vehicle[], role: Role): Vehicle[]
     case 'fleet_manager':
       // Fleet manager sees commercial fleet vehicles
       return vehicles.filter(
-        (v) => v.ownerId === 'usr-fleet-1' || v.ownerName.includes('Logistics') || v.ownerName.includes('Security')
+        (v) =>
+          v.ownerId === 'usr-fleet-1' ||
+          v.category === 'commercial' ||
+          v.ownerName.includes('Logistics') ||
+          v.ownerName.includes('Security')
       );
     case 'agency':
     case 'admin':

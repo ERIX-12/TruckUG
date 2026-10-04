@@ -1,10 +1,10 @@
 import React, { useEffect, useRef, useState } from 'react';
 import * as maplibregl from 'maplibre-gl';
 import maplibreglWorkerUrl from 'maplibre-gl/dist/maplibre-gl-worker.mjs?worker&url';
-import { Vehicle, Camera, Geofence } from '../../types';
+import { Vehicle, Camera, Geofence, Alert } from '../../types';
 import { D3HeatmapOverlay, ColorSchemeId } from './D3HeatmapOverlay';
 import { HeatmapControlPanel } from './HeatmapControlPanel';
-
+import { useRenderPerformance } from '../../hooks/useRenderPerformance';
 // Set worker URL explicitly so Vite loads the bundled web worker correctly
 if (typeof window !== 'undefined' && (maplibregl as any).setWorkerUrl) {
   try {
@@ -25,6 +25,7 @@ import {
 
 interface LiveMapProps {
   vehicles: Vehicle[];
+  alerts: Alert[];
   cameras: Camera[];
   geofences: Geofence[];
   selectedVehicleId?: string;
@@ -34,14 +35,17 @@ interface LiveMapProps {
 }
 
 export const LiveMap: React.FC<LiveMapProps> = ({
-  vehicles,
-  cameras,
-  geofences,
+  vehicles = [],
+  alerts = [],
+  cameras = [],
+  geofences = [],
   selectedVehicleId,
   onSelectVehicle,
   followVehicle = false,
   onToggleFollow,
 }) => {
+  useRenderPerformance('LiveMap');
+  
   const mapContainer = useRef<HTMLDivElement>(null);
   const mapInstance = useRef<maplibregl.Map | null>(null);
   const [mapReady, setMapReady] = useState(false);
@@ -86,8 +90,8 @@ export const LiveMap: React.FC<LiveMapProps> = ({
             },
           ],
         },
-        center: [32.5811, 0.3136], // Kampala [lon, lat]
-        zoom: 12.5,
+        center: [32.4, 1.3], // Uganda Center [lon, lat]
+        zoom: 6.5,
       });
 
       map.addControl(new maplibregl.NavigationControl({ showCompass: true }), 'bottom-right');
@@ -234,6 +238,19 @@ export const LiveMap: React.FC<LiveMapProps> = ({
     }
   }, [vehicles, selectedVehicleId, isFollowing]);
 
+  // Center map on selected vehicle change
+  useEffect(() => {
+    if (!mapInstance.current || !selectedVehicleId) return;
+    const vehicle = vehicles.find((v) => v.id === selectedVehicleId);
+    if (vehicle && vehicle.lastPosition) {
+      mapInstance.current.flyTo({
+        center: [vehicle.lastPosition.lon, vehicle.lastPosition.lat],
+        zoom: 14,
+        essential: true,
+      });
+    }
+  }, [selectedVehicleId]);
+
   // Update Camera Markers
   useEffect(() => {
     const map = mapInstance.current;
@@ -283,6 +300,7 @@ export const LiveMap: React.FC<LiveMapProps> = ({
         <D3HeatmapOverlay
           map={mapInstance.current}
           vehicles={vehicles}
+          alerts={alerts}
           bandwidth={heatmapBandwidth}
           opacity={heatmapOpacity}
           colorScheme={heatmapColorScheme}

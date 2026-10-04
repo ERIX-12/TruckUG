@@ -14,6 +14,7 @@ import {
   Camera,
   AuditEvent,
   Role,
+  VehicleCategory,
 } from './types';
 import {
   INITIAL_VEHICLES,
@@ -25,13 +26,15 @@ import {
   INITIAL_DEVICES,
   INITIAL_AUDIT_LOGS,
 } from './data/mockData';
+import { UGANDA_DISTRICTS } from './data/districts';
 import { loadStoredData, saveStoredData, clearAllStoredData } from './utils/storage';
 import { createChainedAuditEvent, ChainedAuditEvent } from './utils/cryptoAudit';
-import { isPointInPolygon, isCurfewActive, KAMPALA_CORRIDORS } from './utils/geoRules';
+import { isPointInPolygon, isCurfewActive, UGANDA_CORRIDORS, getDistrictFromCorridor } from './utils/geoRules';
 import { filterVehiclesByRole, filterCasesByRole } from './utils/rbac';
 
 import { Navbar } from './components/Navbar';
 import { LiveMap } from './components/Map/LiveMap';
+import { VehicleList } from './components/VehicleList';
 import { VehicleDetailDrawer } from './components/Screens/VehicleDetailDrawer';
 import { AlertsInboxScreen } from './components/Screens/AlertsInboxScreen';
 import { CasesScreen } from './components/Screens/CasesScreen';
@@ -45,8 +48,10 @@ import { VehiclesScreen } from './components/Screens/VehiclesScreen';
 import { ConfirmStolenModal } from './components/ConfirmStolenModal';
 import { AccessReasonModal } from './components/AccessReasonModal';
 import { PublicShareModal } from './components/Screens/PublicShareScreen';
+import { RegisterVehicleModal } from './components/Modals/RegisterVehicleModal';
 import { PlateTag } from './components/PlateTag';
 import { StatusPill } from './components/StatusPill';
+import { Plus } from 'lucide-react';
 
 export default function App() {
   // Persistent App State
@@ -96,13 +101,16 @@ export default function App() {
   // Modals
   const [stolenConfirmPlate, setStolenConfirmPlate] = useState<string | null>(null);
   const [shareVehicle, setShareVehicle] = useState<Vehicle | null>(null);
+  const [isRegisterModalOpen, setIsRegisterModalOpen] = useState(false);
+  const [mapCategoryFilter, setMapCategoryFilter] = useState<'all' | VehicleCategory>('all');
+  const [mapDistrictFilter, setMapDistrictFilter] = useState<string>('all');
 
   // Corridor progression indices per vehicle
   const corridorPositionsRef = useRef<Record<string, { corridor: string; index: number }>>({
-    'veh-1': { corridor: 'jinja_road', index: 1 },
-    'veh-2': { corridor: 'northern_bypass', index: 2 },
-    'veh-3': { corridor: 'cbd_loop', index: 0 },
-    'veh-4': { corridor: 'entebbe_road', index: 1 },
+    'veh-1': { corridor: 'kampala_jinja_road', index: 0 },
+    'veh-2': { corridor: 'northern_bypass', index: 0 },
+    'veh-3': { corridor: 'mbarara_fortportal_road', index: 0 },
+    'veh-4': { corridor: 'gulu_corridor', index: 0 },
   });
 
   // State Persistence Effects
@@ -181,15 +189,23 @@ export default function App() {
 
           // Corridor waypoint movement
           let cData = corridorPositionsRef.current[veh.id];
-          if (!cData) {
-            cData = { corridor: 'northern_bypass', index: 0 };
+          const corridorKeys = Object.keys(UGANDA_CORRIDORS);
+          if (!cData || !UGANDA_CORRIDORS[cData.corridor]) {
+            const fallbackKey = corridorKeys[Math.floor(Math.random() * corridorKeys.length)] || 'northern_bypass';
+            cData = { corridor: fallbackKey, index: 0 };
             corridorPositionsRef.current[veh.id] = cData;
           }
 
-          const waypoints = KAMPALA_CORRIDORS[cData.corridor] || KAMPALA_CORRIDORS.northern_bypass;
+          const waypoints = UGANDA_CORRIDORS[cData.corridor] || UGANDA_CORRIDORS.northern_bypass || Object.values(UGANDA_CORRIDORS)[0];
+          if (!waypoints || waypoints.length === 0) return veh;
+
           const nextIndex = (cData.index + 1) % waypoints.length;
           cData.index = nextIndex;
           const targetWaypoint = waypoints[nextIndex];
+          if (!targetWaypoint) return veh;
+          
+          // District Assignment
+          const district = getDistrictFromCorridor(cData.corridor);
 
           const isStolen = veh.status === 'stolen';
           const speed = isStolen ? 72 : targetWaypoint.speedLimit - 5 + Math.round(Math.random() * 8);
@@ -261,6 +277,7 @@ export default function App() {
 
           return {
             ...veh,
+            district: district,
             lastPosition: {
               ...veh.lastPosition,
               lat: targetWaypoint.lat,
@@ -457,9 +474,45 @@ export default function App() {
     );
   };
 
+  // Vehicle Registration Handler
+  const handleRegisterVehicle = async (newVehicle: Vehicle, corridor: string, newDevice?: Device) => {
+    // 1. Add vehicle to state
+    setVehicles((prev) => [newVehicle, ...prev]);
+
+    // 2. Set corridor waypoint tracking
+    corridorPositionsRef.current[newVehicle.id] = { corridor, index: 0 };
+
+    // 3. Add device to devices state if provided
+    if (newDevice) {
+      setDevices((prev) => [newDevice, ...prev]);
+    }
+
+    // 4. Automatically grant access to registered plate in active session
+    setUnlockedPlates((prev) => new Set([...prev, newVehicle.plate]));
+
+    // 5. Compute cryptographic chained audit event
+    const chained = await createChainedAuditEvent(
+      {
+        actorId: currentRole === 'owner' ? 'usr-owner-1' : currentRole === 'fleet_manager' ? 'usr-fleet-1' : 'usr-admin-1',
+        actorName: currentRole === 'owner' ? 'Mugisha Dennis' : currentRole === 'fleet_manager' ? 'Nile Logistics Ltd' : 'System Administrator',
+        actorRole: currentRole,
+        action: 'REGISTER_VEHICLE',
+        targetType: 'vehicle',
+        targetId: newVehicle.id,
+        reason: `Enrolled new ${newVehicle.category} vehicle ${newVehicle.plate} (${newVehicle.make} ${newVehicle.model}) with GT06 tracker on ${corridor}`,
+        ip: '196.12.140.22',
+      },
+      auditLogs as ChainedAuditEvent[]
+    );
+    setAuditLogs((prev) => [chained, ...prev]);
+
+    // 6. Select vehicle and open details / map
+    setSelectedVehicle(newVehicle);
+  };
+
   // Scope-Aware filtered vehicles
   const scopedVehicles = filterVehiclesByRole(vehicles, currentRole);
-  const visibleMapVehicles = scopedVehicles.filter((v) => {
+  const searchedVehicles = scopedVehicles.filter((v) => {
     if (!searchQuery.trim()) return true;
     const q = searchQuery.toLowerCase().trim();
     return (
@@ -469,6 +522,12 @@ export default function App() {
       v.model.toLowerCase().includes(q) ||
       v.ownerName.toLowerCase().includes(q)
     );
+  });
+
+  const visibleMapVehicles = searchedVehicles.filter((v) => {
+    if (mapCategoryFilter !== 'all' && v.category !== mapCategoryFilter) return false;
+    if (mapDistrictFilter !== 'all' && v.district !== mapDistrictFilter) return false;
+    return true;
   });
 
   const scopedCases = filterCasesByRole(cases, currentRole);
@@ -495,58 +554,23 @@ export default function App() {
         {activeScreen === 'map' && (
           <div className="flex-1 flex flex-col lg:flex-row h-full overflow-hidden relative">
             {/* Left Vehicles List Panel */}
-            <div className="w-full lg:w-[360px] border-r border-gray-200 dark:border-[#2B313D] bg-white dark:bg-[#181C25] flex flex-col shrink-0 z-20 shadow-md">
-              <div className="p-3 border-b border-gray-200 dark:border-gray-800 flex items-center justify-between">
-                <span className="font-heading font-bold text-xs uppercase tracking-wider text-gray-500">
-                  Kampala Trackers ({visibleMapVehicles.length})
-                </span>
-                <span className="text-[10px] font-mono text-emerald-600 dark:text-emerald-400 font-bold">
-                  ● 100% ONLINE
-                </span>
-              </div>
-
-              {/* Scrollable Vehicle list */}
-              <div className="flex-1 overflow-y-auto divide-y divide-gray-100 dark:divide-gray-800/60">
-                {visibleMapVehicles.map((veh) => {
-                  const isSelected = selectedVehicle?.id === veh.id;
-
-                  return (
-                    <div
-                      key={veh.id}
-                      onClick={() => handleSelectVehicleWithGate(veh)}
-                      className={`p-3 cursor-pointer transition-all ${
-                        isSelected
-                          ? 'bg-red-50/70 dark:bg-red-950/30 border-l-4 border-[#B3261E]'
-                          : 'hover:bg-gray-50 dark:hover:bg-gray-800/40'
-                      }`}
-                    >
-                      <div className="flex items-center justify-between mb-1.5">
-                        <PlateTag plate={veh.plate} size="sm" />
-                        <StatusPill status={veh.status} size="sm" />
-                      </div>
-
-                      <div className="flex items-center justify-between text-xs">
-                        <span className="font-semibold text-gray-800 dark:text-gray-200">
-                          {veh.make} {veh.model}
-                        </span>
-                        <span className="font-mono text-[11px] text-emerald-600 dark:text-emerald-400 font-bold">
-                          {veh.lastPosition?.speedKph} km/h
-                        </span>
-                      </div>
-
-                      <div className="text-[11px] text-gray-500 truncate mt-0.5 font-mono">
-                        {veh.lastPosition?.address}
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
+            <VehicleList 
+                vehicles={visibleMapVehicles}
+                mapCategoryFilter={mapCategoryFilter}
+                setMapCategoryFilter={setMapCategoryFilter}
+                mapDistrictFilter={mapDistrictFilter}
+                setMapDistrictFilter={setMapDistrictFilter}
+                UGANDA_DISTRICTS={UGANDA_DISTRICTS}
+                selectedVehicleId={selectedVehicle?.id}
+                onSelectVehicle={handleSelectVehicleWithGate}
+                onEnroll={() => setIsRegisterModalOpen(true)}
+            />
 
             {/* Center: Live MapLibre Map */}
             <div className="flex-1 h-full relative">
               <LiveMap
                 vehicles={visibleMapVehicles}
+                alerts={alerts}
                 cameras={cameras}
                 geofences={geofences}
                 selectedVehicleId={selectedVehicle?.id}
@@ -593,6 +617,7 @@ export default function App() {
               setActiveScreen('map');
             }}
             onReportStolen={handleReportStolen}
+            onOpenRegisterModal={() => setIsRegisterModalOpen(true)}
           />
         )}
 
@@ -712,6 +737,7 @@ export default function App() {
               setSelectedVehicle(v);
               setActiveScreen('map');
             }}
+            onOpenRegisterModal={() => setIsRegisterModalOpen(true)}
           />
         )}
 
@@ -751,6 +777,14 @@ export default function App() {
         vehicle={shareVehicle}
         isOpen={!!shareVehicle}
         onClose={() => setShareVehicle(null)}
+      />
+
+      {/* Register Vehicle Modal */}
+      <RegisterVehicleModal
+        isOpen={isRegisterModalOpen}
+        onClose={() => setIsRegisterModalOpen(false)}
+        onRegister={handleRegisterVehicle}
+        currentRole={currentRole}
       />
     </div>
   );

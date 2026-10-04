@@ -1,6 +1,7 @@
 export type Role = 'owner' | 'fleet_manager' | 'agency' | 'admin';
 
 export type VehicleStatus = 'active' | 'stolen' | 'recovered';
+export type VehicleCategory = 'private' | 'commercial' | 'public';
 
 export interface Vehicle {
   id: string;
@@ -9,6 +10,8 @@ export interface Vehicle {
   make: string;
   model: string;
   color: string;
+  category: VehicleCategory;
+  district: string;
   ownerId: string;
   ownerName: string;
   ownerPhone: string;

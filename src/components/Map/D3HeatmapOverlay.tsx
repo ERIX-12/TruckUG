@@ -1,7 +1,7 @@
 import React, { useEffect, useRef } from 'react';
 import * as d3 from 'd3';
 import * as maplibregl from 'maplibre-gl';
-import { Vehicle } from '../../types';
+import { Vehicle, Alert } from '../../types';
 
 export interface DensityHotspot {
   name: string;
@@ -10,20 +10,13 @@ export interface DensityHotspot {
   weight: number;
 }
 
-// Major traffic & vehicle convergence nodes across Kampala
-export const KAMPALA_HOTSPOTS: DensityHotspot[] = [
-  { name: 'Old Taxi Park & CBD', lat: 0.3131, lon: 32.5788, weight: 1.0 },
-  { name: 'New Taxi Park & Downtown', lat: 0.3148, lon: 32.5742, weight: 0.95 },
-  { name: 'Clock Tower / Queensway Junction', lat: 0.3082, lon: 32.5765, weight: 0.85 },
-  { name: 'Jinja Road / Wampewo Roundabout', lat: 0.3204, lon: 32.5976, weight: 0.88 },
-  { name: 'Wandegeya / Makerere Junction', lat: 0.3325, lon: 32.5695, weight: 0.8 },
-  { name: 'Nakawa / Spear Motors Hub', lat: 0.3308, lon: 32.6162, weight: 0.75 },
-  { name: 'Busega Northern Bypass Flyover', lat: 0.3015, lon: 32.518, weight: 0.82 },
-  { name: 'Kalerwe Market / Northern Bypass', lat: 0.3421, lon: 32.5621, weight: 0.78 },
-  { name: 'Kibuye Roundabout / Entebbe Rd', lat: 0.2975, lon: 32.5684, weight: 0.72 },
-  { name: 'Mulago Roundabout', lat: 0.3375, lon: 32.576, weight: 0.65 },
-  { name: 'Bugolobi Commercial Area', lat: 0.317, lon: 32.618, weight: 0.6 },
-  { name: 'Ntinda Capital Shoppers Hub', lat: 0.354, lon: 32.614, weight: 0.68 },
+// Major traffic & vehicle convergence nodes across Uganda
+export const UGANDA_HOTSPOTS: DensityHotspot[] = [
+  { name: 'Kampala CBD', lat: 0.313, lon: 32.58, weight: 1.0 },
+  { name: 'Jinja Town', lat: 0.447, lon: 33.203, weight: 0.9 },
+  { name: 'Mbale', lat: 1.065, lon: 34.18, weight: 0.8 },
+  { name: 'Mbarara', lat: -0.61, lon: 30.65, weight: 0.85 },
+  { name: 'Gulu City', lat: 2.77, lon: 32.3, weight: 0.75 },
 ];
 
 export type ColorSchemeId = 'ylorrd' | 'inferno' | 'turbo' | 'viridis';
@@ -31,6 +24,7 @@ export type ColorSchemeId = 'ylorrd' | 'inferno' | 'turbo' | 'viridis';
 interface D3HeatmapOverlayProps {
   map: maplibregl.Map | null;
   vehicles: Vehicle[];
+  alerts: Alert[];
   bandwidth: number;
   opacity: number;
   colorScheme: ColorSchemeId;
@@ -40,6 +34,7 @@ interface D3HeatmapOverlayProps {
 export const D3HeatmapOverlay: React.FC<D3HeatmapOverlayProps> = ({
   map,
   vehicles,
+  alerts,
   bandwidth,
   opacity,
   colorScheme,
@@ -80,7 +75,7 @@ export const D3HeatmapOverlay: React.FC<D3HeatmapOverlayProps> = ({
       ctx.scale(dpr, dpr);
       ctx.clearRect(0, 0, width, height);
 
-      // Collect density points (live vehicles + Kampala corridor clusters)
+      // Collect density points (live vehicles + alerts + Kampala corridor clusters)
       const points: [number, number, number][] = [];
 
       // 1. Live vehicles
@@ -94,19 +89,30 @@ export const D3HeatmapOverlay: React.FC<D3HeatmapOverlayProps> = ({
         }
       });
 
-      // 2. Kampala corridor hubs & cluster pings
+      // 2. Alert Hotspots
+      alerts.forEach((alt) => {
+        if (alt.lat === undefined || alt.lon === undefined) return;
+        const pt = map.project([alt.lon, alt.lat]);
+        if (pt.x >= -100 && pt.x <= width + 100 && pt.y >= -100 && pt.y <= height + 100) {
+          // Weighted by severity
+          const weight = alt.severity === 'critical' ? 4.0 : 2.0;
+          points.push([pt.x, pt.y, weight]);
+        }
+      });
+
+      // 3. Uganda regional hubs & cluster pings
       if (includeCorridorPings) {
-        KAMPALA_HOTSPOTS.forEach((spot) => {
+        UGANDA_HOTSPOTS.forEach((spot) => {
           const pt = map.project([spot.lon, spot.lat]);
           if (pt.x >= -150 && pt.x <= width + 150 && pt.y >= -150 && pt.y <= height + 150) {
             points.push([pt.x, pt.y, spot.weight * 2.0]);
 
-            // Disperse micro pings around each major junction to reflect dense matatu & boda traffic
+            // Disperse micro pings around each major hub
             const microCount = Math.floor(spot.weight * 6);
             for (let i = 0; i < microCount; i++) {
               const angle = (i / microCount) * Math.PI * 2;
-              const radiusLon = 0.003 * Math.cos(angle);
-              const radiusLat = 0.0025 * Math.sin(angle);
+              const radiusLon = 0.05 * Math.cos(angle); // Increased radius to cover regional area
+              const radiusLat = 0.04 * Math.sin(angle);
               const subPt = map.project([spot.lon + radiusLon, spot.lat + radiusLat]);
               points.push([subPt.x, subPt.y, spot.weight * 0.9]);
             }
@@ -182,7 +188,7 @@ export const D3HeatmapOverlay: React.FC<D3HeatmapOverlayProps> = ({
       map.off('zoom', render);
       map.off('resize', render);
     };
-  }, [map, vehicles, bandwidth, opacity, colorScheme, includeCorridorPings]);
+  }, [map, vehicles, alerts, bandwidth, opacity, colorScheme, includeCorridorPings]);
 
   return (
     <canvas

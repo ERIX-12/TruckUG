@@ -49,14 +49,14 @@ export const CasesScreen: React.FC<CasesScreenProps> = ({
     <div className="flex-1 overflow-y-auto p-4 sm:p-6 bg-gray-50 dark:bg-[#0F1218] text-gray-900 dark:text-gray-100 select-none">
       <div className="max-w-6xl mx-auto space-y-4">
         {/* Banner: Section 5 - Your access is logged */}
-        <div className="p-3 rounded-lg bg-blue-50 dark:bg-blue-950/40 border border-blue-200 dark:border-blue-900 flex items-center justify-between text-xs text-blue-900 dark:text-blue-200">
+        <div className="p-3 rounded-lg bg-blue-50 dark:bg-blue-950/40 border border-blue-200 dark:border-blue-900 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 text-xs text-blue-900 dark:text-blue-200">
           <div className="flex items-center gap-2">
             <ShieldCheck className="w-4 h-4 text-blue-600 dark:text-blue-400 shrink-0" />
             <span>
               <strong>Uganda Police Force &amp; Inter-Agency Command:</strong> All location reads, trail queries, and case records require operational reasons and are logged to the tamper-evident audit ledger.
             </span>
           </div>
-          <span className="font-mono text-[11px] font-bold bg-blue-200 dark:bg-blue-900 px-2 py-0.5 rounded">
+          <span className="font-mono text-[11px] font-bold bg-blue-200 dark:bg-blue-900 px-2 py-0.5 rounded shrink-0">
             AUDIT ACTIVE
           </span>
         </div>

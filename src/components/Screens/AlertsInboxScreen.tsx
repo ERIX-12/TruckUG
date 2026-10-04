@@ -110,12 +110,12 @@ export const AlertsInboxScreen: React.FC<AlertsInboxScreenProps> = ({
           </select>
 
           <span className="ml-auto font-mono text-[11px] text-gray-500">
-            Showing {filteredAlerts.length} of {alerts.length} events
+            Showing {(filteredAlerts || []).length} of {(alerts || []).length} events
           </span>
         </div>
 
         {/* Alerts List */}
-        {filteredAlerts.length === 0 ? (
+        {(filteredAlerts || []).length === 0 ? (
           <div className="text-center py-16 bg-white dark:bg-[#181C25] rounded-xl border border-gray-200 dark:border-gray-800 text-gray-500 space-y-2">
             <CheckCircle2 className="w-10 h-10 text-emerald-500 mx-auto" />
             <h4 className="font-bold text-base text-gray-800 dark:text-gray-200">No active alerts</h4>

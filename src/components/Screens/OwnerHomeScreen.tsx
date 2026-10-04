@@ -20,6 +20,7 @@ interface OwnerHomeScreenProps {
   onReportStolen: (plate: string) => void;
   onOpenShareModal: (vehicle: Vehicle) => void;
   onSelectVehicle: (vehicle: Vehicle) => void;
+  onOpenRegisterModal?: () => void;
 }
 
 export const OwnerHomeScreen: React.FC<OwnerHomeScreenProps> = ({
@@ -27,6 +28,7 @@ export const OwnerHomeScreen: React.FC<OwnerHomeScreenProps> = ({
   onReportStolen,
   onOpenShareModal,
   onSelectVehicle,
+  onOpenRegisterModal,
 }) => {
   // Filter only owner's vehicles
   const ownerVehicles = vehicles.filter((v) => v.ownerId === 'usr-owner-1');
@@ -44,18 +46,44 @@ export const OwnerHomeScreen: React.FC<OwnerHomeScreenProps> = ({
               Mugisha Dennis
             </h1>
           </div>
-          <div className="p-2 rounded-full bg-emerald-100 dark:bg-emerald-950/60 border border-emerald-300 dark:border-emerald-800 text-emerald-800 dark:text-emerald-300">
-            <ShieldCheck className="w-5 h-5" />
+          <div className="flex items-center gap-2">
+            {onOpenRegisterModal && (
+              <button
+                onClick={onOpenRegisterModal}
+                className="px-3 py-1.5 rounded-xl bg-[#B3261E] hover:bg-red-700 text-white font-bold text-xs flex items-center gap-1 shadow-sm transition-all cursor-pointer"
+              >
+                <span>+ Enroll Vehicle</span>
+              </button>
+            )}
+            <div className="p-2 rounded-full bg-emerald-100 dark:bg-emerald-950/60 border border-emerald-300 dark:border-emerald-800 text-emerald-800 dark:text-emerald-300">
+              <ShieldCheck className="w-5 h-5" />
+            </div>
           </div>
         </div>
 
         {/* Vehicle Cards List */}
         <div className="space-y-4">
-          <h2 className="text-sm font-bold font-heading uppercase tracking-wide text-gray-500">
-            Registered Vehicles ({ownerVehicles.length})
-          </h2>
+          <div className="flex items-center justify-between">
+            <h2 className="text-sm font-bold font-heading uppercase tracking-wide text-gray-500">
+              Registered Vehicles ({ownerVehicles.length})
+            </h2>
+          </div>
 
-          {ownerVehicles.map((veh) => {
+          {ownerVehicles.length === 0 ? (
+            <div className="p-8 text-center bg-white dark:bg-[#181C25] rounded-2xl border border-gray-200 dark:border-gray-800 space-y-3">
+              <h3 className="text-sm font-bold text-gray-700 dark:text-gray-300">No Vehicles Enrolled</h3>
+              <p className="text-xs text-gray-500">Register your personal vehicle or boda to start real-time tracking.</p>
+              {onOpenRegisterModal && (
+                <button
+                  onClick={onOpenRegisterModal}
+                  className="px-4 py-2 rounded-xl bg-[#B3261E] text-white font-bold text-xs shadow-md"
+                >
+                  + Enroll Your Vehicle
+                </button>
+              )}
+            </div>
+          ) : (
+            ownerVehicles.map((veh) => {
             const isStolen = veh.status === 'stolen';
 
             return (
@@ -72,8 +100,11 @@ export const OwnerHomeScreen: React.FC<OwnerHomeScreenProps> = ({
                   <div className="flex items-center gap-3">
                     <PlateTag plate={veh.plate} size="lg" />
                     <div>
-                      <div className="font-bold text-sm text-gray-900 dark:text-gray-100">
-                        {veh.make} {veh.model}
+                      <div className="font-bold text-sm text-gray-900 dark:text-gray-100 flex items-center gap-2">
+                        <span>{veh.make} {veh.model}</span>
+                        <span className="text-[10px] font-bold uppercase px-2 py-0.2 rounded-full bg-blue-100 dark:bg-blue-950/70 text-blue-800 dark:text-blue-300">
+                          {veh.category || 'private'}
+                        </span>
                       </div>
                       <div className="text-xs text-gray-500 font-medium">{veh.color}</div>
                     </div>
@@ -134,7 +165,7 @@ export const OwnerHomeScreen: React.FC<OwnerHomeScreenProps> = ({
                 </div>
               </div>
             );
-          })}
+          }))}
         </div>
 
         {/* Consents list (Section 4 & 5 - Data Protection Act) */}

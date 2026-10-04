@@ -1,5 +1,5 @@
 import React from 'react';
-import { ColorSchemeId, KAMPALA_HOTSPOTS } from './D3HeatmapOverlay';
+import { ColorSchemeId, UGANDA_HOTSPOTS } from './D3HeatmapOverlay';
 import { Flame, Sliders, Eye, EyeOff, MapPin, X, Sparkles } from 'lucide-react';
 
 interface HeatmapControlPanelProps {
@@ -172,25 +172,25 @@ export const HeatmapControlPanel: React.FC<HeatmapControlPanelProps> = ({
               className="rounded accent-amber-500 w-3.5 h-3.5"
             />
             <span className="text-gray-700 dark:text-gray-300 font-medium">
-              Include Kampala Stage/Taxi Hubs
+              Include Regional Traffic Hubs
             </span>
           </label>
         </div>
 
-        {/* Quick Jumps to Kampala Convergence Hotspots */}
+        {/* Quick Jumps to Regional Convergence Hotspots */}
         <div className="space-y-1 pt-2 border-t border-gray-200 dark:border-gray-800">
           <span className="block text-[10px] font-bold uppercase tracking-wider text-gray-400">
             Jump to High Density Hub:
           </span>
           <div className="flex flex-wrap gap-1">
-            {KAMPALA_HOTSPOTS.slice(0, 4).map((h, i) => (
+            {UGANDA_HOTSPOTS.map((h, i) => (
               <button
                 key={i}
                 onClick={() => onFlyToHotspot(h.lat, h.lon)}
                 className="px-2 py-0.5 rounded bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 text-[10px] font-mono text-gray-700 dark:text-gray-300 flex items-center gap-1"
               >
                 <MapPin className="w-2.5 h-2.5 text-red-500" />
-                {h.name.split('&')[0].trim()}
+                {h.name}
               </button>
             ))}
           </div>
