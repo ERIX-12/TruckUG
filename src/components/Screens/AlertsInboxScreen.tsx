@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
-import { Alert, AlertSeverity, AlertState } from '../../types';
+import { Alert, AlertSeverity, AlertState, AuditEvent } from '../../types';
 import { PlateTag } from '../PlateTag';
+import { Alerts24hSummaryPanel } from './Alerts24hSummaryPanel';
 import {
   AlertTriangle,
   ShieldAlert,
@@ -13,6 +14,7 @@ import {
   MapPin,
   Clock,
   Filter,
+  X,
 } from 'lucide-react';
 
 interface AlertsInboxScreenProps {
@@ -21,6 +23,7 @@ interface AlertsInboxScreenProps {
   onCloseAlert: (id: string) => void;
   onSelectAlertVehicle: (vehicleId: string) => void;
   searchQuery?: string;
+  onAddAuditLog?: (event: AuditEvent) => void;
 }
 
 export const AlertsInboxScreen: React.FC<AlertsInboxScreenProps> = ({
@@ -29,14 +32,19 @@ export const AlertsInboxScreen: React.FC<AlertsInboxScreenProps> = ({
   onCloseAlert,
   onSelectAlertVehicle,
   searchQuery = '',
+  onAddAuditLog,
 }) => {
   const [filterSeverity, setFilterSeverity] = useState<string>('all');
   const [filterState, setFilterState] = useState<string>('all');
+  const [categoryFilter, setCategoryFilter] = useState<'all' | 'speed' | 'curfew' | 'harsh_braking'>('all');
   const [soundEnabled, setSoundEnabled] = useState(true);
 
   const filteredAlerts = alerts.filter((alt) => {
     if (filterSeverity !== 'all' && alt.severity !== filterSeverity) return false;
     if (filterState !== 'all' && alt.state !== filterState) return false;
+    if (categoryFilter === 'speed' && alt.kind !== 'speed') return false;
+    if (categoryFilter === 'curfew' && alt.kind !== 'curfew') return false;
+    if (categoryFilter === 'harsh_braking' && alt.kind !== 'harsh_braking') return false;
     if (searchQuery.trim()) {
       const q = searchQuery.toLowerCase().trim();
       const match =
@@ -50,7 +58,7 @@ export const AlertsInboxScreen: React.FC<AlertsInboxScreenProps> = ({
   });
 
   return (
-    <div className="flex-1 overflow-y-auto p-4 sm:p-6 bg-gray-50 dark:bg-[#0F1218] text-gray-900 dark:text-gray-100 select-none">
+    <div className="flex-1 overflow-y-auto p-4 sm:p-6 pb-24 sm:pb-6 bg-gray-50 dark:bg-[#0F1218] text-gray-900 dark:text-gray-100 select-none">
       <div className="max-w-5xl mx-auto space-y-4">
         {/* Header and Controls */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-gray-200 dark:border-gray-800">
@@ -80,6 +88,14 @@ export const AlertsInboxScreen: React.FC<AlertsInboxScreenProps> = ({
           </div>
         </div>
 
+        {/* 24-Hour Telematics Summary Panel (Speeding, Curfew, Harsh Braking) */}
+        <Alerts24hSummaryPanel
+          alerts={alerts}
+          selectedCategoryFilter={categoryFilter}
+          onSelectCategoryFilter={(cat) => setCategoryFilter(cat)}
+          onAddAuditLog={onAddAuditLog}
+        />
+
         {/* Filters */}
         <div className="flex flex-wrap items-center gap-3 bg-white dark:bg-[#181C25] p-3 rounded-lg border border-gray-200 dark:border-gray-800 text-xs">
           <div className="flex items-center gap-1 text-gray-500 font-medium">
@@ -90,7 +106,7 @@ export const AlertsInboxScreen: React.FC<AlertsInboxScreenProps> = ({
           <select
             value={filterSeverity}
             onChange={(e) => setFilterSeverity(e.target.value)}
-            className="px-2.5 py-1 rounded border border-gray-300 dark:border-gray-700 bg-transparent text-gray-800 dark:text-gray-200 font-semibold"
+            className="px-2.5 py-1 rounded border border-gray-300 dark:border-gray-700 bg-transparent text-gray-800 dark:text-gray-200 font-semibold cursor-pointer"
           >
             <option value="all">All Severities</option>
             <option value="critical">Critical (Stolen / High Threat)</option>
@@ -101,13 +117,27 @@ export const AlertsInboxScreen: React.FC<AlertsInboxScreenProps> = ({
           <select
             value={filterState}
             onChange={(e) => setFilterState(e.target.value)}
-            className="px-2.5 py-1 rounded border border-gray-300 dark:border-gray-700 bg-transparent text-gray-800 dark:text-gray-200 font-semibold"
+            className="px-2.5 py-1 rounded border border-gray-300 dark:border-gray-700 bg-transparent text-gray-800 dark:text-gray-200 font-semibold cursor-pointer"
           >
             <option value="all">All States</option>
             <option value="new">New (Unacknowledged)</option>
             <option value="ack">Acknowledged</option>
             <option value="closed">Closed / Handled</option>
           </select>
+
+          {/* Active 24h category filter pill if set */}
+          {categoryFilter !== 'all' && (
+            <div className="flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-bold font-mono bg-blue-100 dark:bg-blue-950 text-blue-700 dark:text-blue-300 border border-blue-300 dark:border-blue-800">
+              <span>Category: {categoryFilter.replace('_', ' ').toUpperCase()}</span>
+              <button
+                onClick={() => setCategoryFilter('all')}
+                className="hover:text-red-500 cursor-pointer ml-1"
+                title="Clear category filter"
+              >
+                <X className="w-3 h-3" />
+              </button>
+            </div>
+          )}
 
           <span className="ml-auto font-mono text-[11px] text-gray-500">
             Showing {(filteredAlerts || []).length} of {(alerts || []).length} events
@@ -182,14 +212,14 @@ export const AlertsInboxScreen: React.FC<AlertsInboxScreenProps> = ({
                           <Clock className="w-3.5 h-3.5 text-gray-400" />
                           {new Date(alt.ts).toLocaleTimeString('en-GB', { timeZone: 'Africa/Kampala' })} EAT
                         </span>
-                        {alt.payload.confidence && (
+                        {alt.payload?.confidence && (
                           <span className="font-mono text-[11px] font-bold text-emerald-600 dark:text-emerald-400">
                             ANPR Conf: {(alt.payload.confidence * 100).toFixed(0)}%
                           </span>
                         )}
                       </div>
 
-                      {alt.payload.details && (
+                      {alt.payload?.details && (
                         <p className="text-xs text-gray-700 dark:text-gray-300 font-mono mt-0.5">
                           {alt.payload.details}
                         </p>
@@ -201,9 +231,11 @@ export const AlertsInboxScreen: React.FC<AlertsInboxScreenProps> = ({
                   <div className="flex items-center gap-2 self-end sm:self-center shrink-0">
                     <button
                       onClick={() => onSelectAlertVehicle(alt.vehicleId)}
-                      className="px-3 py-1.5 rounded-md text-xs font-semibold bg-gray-100 hover:bg-gray-200 dark:bg-gray-800 dark:hover:bg-gray-700 text-gray-800 dark:text-gray-200"
+                      className="px-3 py-1.5 rounded-md text-xs font-semibold bg-blue-50 dark:bg-blue-950/60 hover:bg-blue-100 dark:hover:bg-blue-900/60 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-900 flex items-center gap-1.5 cursor-pointer transition-colors shadow-2xs"
+                      title="Locate vehicle on live map with spoken dispatch"
                     >
-                      Locate
+                      <Volume2 className="w-3.5 h-3.5 animate-pulse" />
+                      <span>Locate</span>
                     </button>
                     {alt.state === 'new' && (
                       <button

@@ -36,8 +36,8 @@ export const AccessReasonModal: React.FC<AccessReasonModalProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs animate-in fade-in duration-150">
-      <div className="relative w-full max-w-md rounded-xl bg-white dark:bg-[#181C25] border border-blue-200 dark:border-blue-900 shadow-2xl p-6 text-gray-900 dark:text-gray-100">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/60 backdrop-blur-xs animate-in fade-in duration-150">
+      <div className="relative w-full max-w-md max-h-[calc(100vh-32px)] overflow-y-auto rounded-xl bg-white dark:bg-[#181C25] border border-blue-200 dark:border-blue-900 shadow-2xl p-4 sm:p-6 text-gray-900 dark:text-gray-100">
         <button
           onClick={onClose}
           className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 p-1"

@@ -50,7 +50,7 @@ export const GeofencesScreen: React.FC<GeofencesScreenProps> = ({
   };
 
   return (
-    <div className="flex-1 overflow-y-auto p-4 sm:p-6 bg-gray-50 dark:bg-[#0F1218] text-gray-900 dark:text-gray-100 select-none">
+    <div className="flex-1 overflow-y-auto p-4 sm:p-6 pb-24 sm:pb-6 bg-gray-50 dark:bg-[#0F1218] text-gray-900 dark:text-gray-100 select-none">
       <div className="max-w-5xl mx-auto space-y-4">
         {/* Header */}
         <div className="flex items-center justify-between pb-3 border-b border-gray-200 dark:border-gray-800">
@@ -134,9 +134,12 @@ export const GeofencesScreen: React.FC<GeofencesScreenProps> = ({
             )}
 
             {rule === 'curfew' && (
-              <div className="p-3 rounded-lg bg-gray-50 dark:bg-[#13161D] border border-gray-200 dark:border-gray-800 flex items-center gap-4 text-xs font-mono">
-                <Clock className="w-5 h-5 text-blue-500" />
+              <div className="p-3 rounded-lg bg-gray-50 dark:bg-[#13161D] border border-gray-200 dark:border-gray-800 flex flex-wrap items-center gap-3 text-xs font-mono">
                 <div className="flex items-center gap-2">
+                  <Clock className="w-5 h-5 text-blue-500" />
+                  <span className="font-semibold text-gray-700 dark:text-gray-300">Curfew Window:</span>
+                </div>
+                <div className="flex items-center gap-2 flex-wrap">
                   <span>Start (EAT):</span>
                   <input
                     type="time"

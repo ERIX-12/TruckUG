@@ -78,3 +78,121 @@ body {
   border-radius: 2px;
   font-weight: 800;
 }
+
+/* =========================================================================
+   Intercept-In-Progress Tactical Pulsating CSS Animations
+   ========================================================================= */
+@keyframes intercept-beacon-pulse {
+  0% {
+    transform: scale(0.92);
+    box-shadow: 0 0 0 0 rgba(0, 229, 255, 0.75);
+  }
+  50% {
+    transform: scale(1.08);
+    box-shadow: 0 0 24px 8px rgba(0, 229, 255, 0.55);
+  }
+  100% {
+    transform: scale(0.92);
+    box-shadow: 0 0 0 0 rgba(0, 229, 255, 0.75);
+  }
+}
+
+@keyframes intercept-target-pulse {
+  0% {
+    transform: scale(0.92);
+    box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.8);
+  }
+  50% {
+    transform: scale(1.1);
+    box-shadow: 0 0 26px 10px rgba(239, 68, 68, 0.6);
+  }
+  100% {
+    transform: scale(0.92);
+    box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.8);
+  }
+}
+
+@keyframes intercept-wave-expand {
+  0% {
+    transform: scale(0.75);
+    opacity: 0.95;
+  }
+  50% {
+    opacity: 0.55;
+  }
+  100% {
+    transform: scale(2.6);
+    opacity: 0;
+  }
+}
+
+@keyframes intercept-strobe-flash {
+  0%, 100% {
+    opacity: 0.35;
+    transform: scale(0.98);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.02);
+    filter: drop-shadow(0 0 6px currentColor);
+  }
+}
+
+/* Marker high-priority stacking */
+.intercept-in-progress {
+  z-index: 45 !important;
+}
+
+/* Concentric Expanding Radar / Beacon Waves */
+.intercept-in-progress .intercept-wave {
+  position: absolute;
+  inset: -12px;
+  border-radius: 9999px;
+  pointer-events: none;
+  animation: intercept-wave-expand 2s cubic-bezier(0, 0.2, 0.8, 1) infinite;
+}
+
+/* Responding Patrol Unit Waves: Cyan & Royal Police Blue */
+.intercept-in-progress.intercept-patrol .intercept-wave-1 {
+  border: 2.5px solid #00E5FF;
+  animation-delay: 0s;
+}
+
+.intercept-in-progress.intercept-patrol .intercept-wave-2 {
+  border: 2px solid #2563EB;
+  animation-delay: 0.65s;
+}
+
+.intercept-in-progress.intercept-patrol .intercept-wave-3 {
+  border: 1.5px solid #60A5FA;
+  animation-delay: 1.3s;
+}
+
+/* Target Vehicle Waves: Tactical Crimson & Amber */
+.intercept-in-progress.intercept-target .intercept-wave-1 {
+  border: 2.5px solid #EF4444;
+  animation-delay: 0s;
+}
+
+.intercept-in-progress.intercept-target .intercept-wave-2 {
+  border: 2px solid #F59E0B;
+  animation-delay: 0.65s;
+}
+
+.intercept-in-progress.intercept-target .intercept-wave-3 {
+  border: 1.5px solid #DC2626;
+  animation-delay: 1.3s;
+}
+
+/* Beacon Core Pulsing */
+.intercept-in-progress.intercept-patrol .intercept-beacon-core {
+  animation: intercept-beacon-pulse 1.3s ease-in-out infinite;
+}
+
+.intercept-in-progress.intercept-target .intercept-beacon-core {
+  animation: intercept-target-pulse 1.2s ease-in-out infinite;
+}
+
+.intercept-badge-pulse {
+  animation: intercept-strobe-flash 1.1s ease-in-out infinite;
+}

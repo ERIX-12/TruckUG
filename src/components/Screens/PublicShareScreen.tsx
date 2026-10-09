@@ -42,9 +42,9 @@ export const PublicShareModal: React.FC<PublicShareModalProps> = ({
           Create Expiring Share Link
         </h3>
 
-        <p className="text-xs text-gray-600 dark:text-gray-400 mb-4 leading-relaxed">
+        <div className="text-xs text-gray-600 dark:text-gray-400 mb-4 leading-relaxed">
           Allow family, delivery recipients, or mechanics to track vehicle <PlateTag plate={vehicle.plate} size="sm" /> live without access to your account or trip history.
-        </p>
+        </div>
 
         {shareUrl ? (
           <div className="space-y-4">

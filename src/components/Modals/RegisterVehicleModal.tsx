@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Vehicle, VehicleCategory, Role, Device } from '../../types';
 import { PlateTag } from '../PlateTag';
 import { UGANDA_CORRIDORS, getDistrictFromCorridor } from '../../utils/geoRules';
+import { POLICE_STATION_PRESETS } from '../../data/mockPoliceStations';
 import {
   X,
   Car,
@@ -18,6 +19,8 @@ import {
   Cpu,
   Sparkles,
   Info,
+  Siren,
+  Shield,
 } from 'lucide-react';
 
 interface RegisterVehicleModalProps {
@@ -176,6 +179,12 @@ export const RegisterVehicleModal: React.FC<RegisterVehicleModalProps> = ({
       ignition,
       deviceImei: imei.trim(),
       deviceStatus: 'online',
+      isPatrol: category === 'police',
+      callsign: category === 'police' ? `PATROL-${cleanPlate.replace(/\s+/g, '')}` : undefined,
+      officerInCharge: category === 'police' ? 'Uganda Police Force Patrol Commander' : undefined,
+      assignedDivision: category === 'police' ? 'Kampala Metropolitan Police Command' : undefined,
+      patrolUnitType: category === 'police' ? 'flying_squad' : undefined,
+      topSpeedKph: category === 'police' ? 92 : undefined,
       lastPosition: {
         deviceId,
         vehicleId,
@@ -247,12 +256,12 @@ export const RegisterVehicleModal: React.FC<RegisterVehicleModalProps> = ({
             <label className="block text-xs font-bold uppercase text-gray-700 dark:text-gray-300 mb-2">
               Vehicle Classification &amp; Operational Category *
             </label>
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
               {/* Private */}
               <button
                 type="button"
                 onClick={() => setCategory('private')}
-                className={`p-3 rounded-xl border text-left flex items-start gap-3 transition-all ${
+                className={`p-3 rounded-xl border text-left flex items-start gap-2.5 transition-all ${
                   category === 'private'
                     ? 'border-blue-600 bg-blue-50/80 dark:bg-blue-950/30 text-blue-900 dark:text-blue-200 ring-2 ring-blue-500/20 shadow-xs'
                     : 'border-gray-200 dark:border-gray-800 hover:border-gray-300 dark:hover:border-gray-700 bg-gray-50/50 dark:bg-[#12151C]'
@@ -268,9 +277,9 @@ export const RegisterVehicleModal: React.FC<RegisterVehicleModalProps> = ({
                   <Car className="w-4 h-4" />
                 </div>
                 <div>
-                  <div className="text-xs font-bold uppercase">Private Personal</div>
-                  <div className="text-[11px] text-gray-500 dark:text-gray-400">
-                    Sedans, SUVs, personal bodas
+                  <div className="text-xs font-bold uppercase">Private</div>
+                  <div className="text-[10px] text-gray-500 dark:text-gray-400">
+                    Personal cars, SUVs
                   </div>
                 </div>
               </button>
@@ -279,7 +288,7 @@ export const RegisterVehicleModal: React.FC<RegisterVehicleModalProps> = ({
               <button
                 type="button"
                 onClick={() => setCategory('commercial')}
-                className={`p-3 rounded-xl border text-left flex items-start gap-3 transition-all ${
+                className={`p-3 rounded-xl border text-left flex items-start gap-2.5 transition-all ${
                   category === 'commercial'
                     ? 'border-amber-600 bg-amber-50/80 dark:bg-amber-950/30 text-amber-900 dark:text-amber-200 ring-2 ring-amber-500/20 shadow-xs'
                     : 'border-gray-200 dark:border-gray-800 hover:border-gray-300 dark:hover:border-gray-700 bg-gray-50/50 dark:bg-[#12151C]'
@@ -295,9 +304,9 @@ export const RegisterVehicleModal: React.FC<RegisterVehicleModalProps> = ({
                   <Truck className="w-4 h-4" />
                 </div>
                 <div>
-                  <div className="text-xs font-bold uppercase">Commercial Fleet</div>
-                  <div className="text-[11px] text-gray-500 dark:text-gray-400">
-                    Logistics, security, heavy haulers
+                  <div className="text-xs font-bold uppercase">Commercial</div>
+                  <div className="text-[10px] text-gray-500 dark:text-gray-400">
+                    Fleets, haulers
                   </div>
                 </div>
               </button>
@@ -306,7 +315,7 @@ export const RegisterVehicleModal: React.FC<RegisterVehicleModalProps> = ({
               <button
                 type="button"
                 onClick={() => setCategory('public')}
-                className={`p-3 rounded-xl border text-left flex items-start gap-3 transition-all ${
+                className={`p-3 rounded-xl border text-left flex items-start gap-2.5 transition-all ${
                   category === 'public'
                     ? 'border-emerald-600 bg-emerald-50/80 dark:bg-emerald-950/30 text-emerald-900 dark:text-emerald-200 ring-2 ring-emerald-500/20 shadow-xs'
                     : 'border-gray-200 dark:border-gray-800 hover:border-gray-300 dark:hover:border-gray-700 bg-gray-50/50 dark:bg-[#12151C]'
@@ -323,8 +332,42 @@ export const RegisterVehicleModal: React.FC<RegisterVehicleModalProps> = ({
                 </div>
                 <div>
                   <div className="text-xs font-bold uppercase">Public Transit</div>
-                  <div className="text-[11px] text-gray-500 dark:text-gray-400">
-                    Matatus, buses, commercial transit
+                  <div className="text-[10px] text-gray-500 dark:text-gray-400">
+                    Matatus, buses
+                  </div>
+                </div>
+              </button>
+
+              {/* Police Station / UPF Patrol */}
+              <button
+                type="button"
+                onClick={() => {
+                  setCategory('police');
+                  if (!plate || !plate.startsWith('UP')) setPlate('UP ');
+                  setOwnerName('Uganda Police Force');
+                  setMake('Toyota');
+                  setModel('Land Cruiser 79 Tactical Command');
+                  setColor('Police Blue & White');
+                }}
+                className={`p-3 rounded-xl border text-left flex items-start gap-2.5 transition-all ${
+                  category === 'police'
+                    ? 'border-blue-600 bg-blue-50/80 dark:bg-blue-950/40 text-blue-900 dark:text-blue-200 ring-2 ring-blue-500/20 shadow-xs'
+                    : 'border-gray-200 dark:border-gray-800 hover:border-gray-300 dark:hover:border-gray-700 bg-gray-50/50 dark:bg-[#12151C]'
+                }`}
+              >
+                <div
+                  className={`p-2 rounded-lg ${
+                    category === 'police'
+                      ? 'bg-blue-900 text-amber-300'
+                      : 'bg-gray-200 dark:bg-gray-800 text-gray-600 dark:text-gray-400'
+                  }`}
+                >
+                  <Building2 className="w-4 h-4" />
+                </div>
+                <div>
+                  <div className="text-xs font-bold uppercase">Police Station / UPF</div>
+                  <div className="text-[10px] text-gray-500 dark:text-gray-400">
+                    Stations &amp; interceptors
                   </div>
                 </div>
               </button>

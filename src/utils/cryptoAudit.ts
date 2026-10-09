@@ -33,7 +33,10 @@ export async function createChainedAuditEvent(
   },
   previousEvents: ChainedAuditEvent[]
 ): Promise<ChainedAuditEvent> {
-  const prevHash = previousEvents.length > 0 ? previousEvents[0].hash : GENESIS_HASH;
+  const prevHash =
+    previousEvents.length > 0 && previousEvents[0]?.hash
+      ? previousEvents[0].hash
+      : GENESIS_HASH;
   const ts = new Date().toISOString();
   const id = `aud-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`;
   const ip = params.ip || '197.239.4.18 (NITA-U Govnet)';

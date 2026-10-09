@@ -28,6 +28,113 @@ export function isPointInPolygon(
 }
 
 /**
+ * Geographic bounding box coordinates for the Republic of Uganda.
+ * Latitudes: approx -1.48° (South) to 4.23° (North)
+ * Longitudes: approx 29.57° (West) to 35.03° (East)
+ */
+export const UGANDA_BOUNDS = {
+  minLat: -1.48,
+  maxLat: 4.23,
+  minLon: 29.57,
+  maxLon: 35.03,
+};
+
+/**
+ * Simplified territorial border polygon for Uganda [lat, lon] (clockwise).
+ * Covers international borders with South Sudan, Kenya, Tanzania, Rwanda, and DR Congo.
+ */
+export const UGANDA_BORDER_POLYGON: [number, number][] = [
+  // North-West (West Nile / South Sudan border)
+  [3.55, 30.88], // Koboko / Oraba border with South Sudan & DRC
+  [3.65, 31.35], // Yumbe / Moyo border
+  [3.58, 31.98], // Moyo / Nimule / Elegu border
+  [3.78, 32.55], // Lamwo border
+  [3.85, 33.25], // Kitgum border
+  [4.22, 33.95], // Kidepo Valley / North Kaabong border (northernmost tip ~4.22°N)
+  [4.05, 34.35], // Karenga / North Karamoja
+  // North-East / East (Kenya border)
+  [3.35, 34.75], // Kaabong / Kotido East
+  [2.75, 34.92], // Moroto East (near Kenyan border)
+  [1.95, 34.98], // Amudat East
+  [1.35, 34.85], // Mt Elgon / Kween
+  [0.85, 34.35], // Tororo / Malaba border
+  [0.45, 34.12], // Busia border with Kenya
+  // South-East (Lake Victoria / Kenya & Tanzania tri-point)
+  [-0.15, 33.95], // Lake Victoria Kenyan border
+  [-1.00, 33.90], // Lake Victoria Tanzania border (1° S parallel)
+  // South (Tanzania border along 1° South)
+  [-1.00, 32.50], // Lake Victoria central
+  [-1.00, 31.60], // Rakai / Mutukula border with Tanzania
+  [-1.05, 30.85], // Isingiro border
+  // South-West (Rwanda border)
+  [-1.25, 30.50], // Mirama Hills / Ntungamo border
+  [-1.40, 30.00], // Kabale / Katuna border
+  [-1.46, 29.70], // Kisoro / Cyanika border (-1.46°S, southernmost)
+  // West (DR Congo border)
+  [-1.30, 29.60], // Mgahinga / Bwindi
+  [-0.95, 29.62], // Kanungu / Ishasha
+  [-0.15, 29.80], // Kasese / Lake Edward
+  [0.45, 29.98], // Rwenzori Mountains
+  [0.85, 30.25], // Bundibugyo / Semliki
+  [1.35, 30.55], // Lake Albert South (Ntoroko)
+  [1.90, 31.10], // Lake Albert North (Buliisa / Pakwach)
+  [2.35, 31.30], // Pakwach / West Nile entry
+  [2.50, 30.95], // Nebbi / Zombo (DRC border)
+  [3.05, 30.85], // Arua / Vurra border post
+  [3.55, 30.88], // Back to Koboko
+];
+
+/**
+ * GeoJSON Feature representing the national boundary of the Republic of Uganda.
+ * Used for map visualization on MapLibre / Leaflet layers.
+ */
+export const UGANDA_BORDER_GEOJSON = {
+  type: 'Feature' as const,
+  properties: {
+    name: 'Republic of Uganda',
+    description: 'Sovereign Territorial Border & Telematics Tracking Zone',
+  },
+  geometry: {
+    type: 'Polygon' as const,
+    coordinates: [
+      UGANDA_BORDER_POLYGON.map(([lat, lon]) => [lon, lat]), // GeoJSON expects [lon, lat]
+    ],
+  },
+};
+
+/**
+ * Validates whether a given latitude and longitude coordinate pair falls within the sovereign boundaries of Uganda.
+ */
+export function isWithinUganda(lat: number, lon: number): boolean {
+  if (
+    lat < UGANDA_BOUNDS.minLat ||
+    lat > UGANDA_BOUNDS.maxLat ||
+    lon < UGANDA_BOUNDS.minLon ||
+    lon > UGANDA_BOUNDS.maxLon
+  ) {
+    return false;
+  }
+  return isPointInPolygon([lat, lon], UGANDA_BORDER_POLYGON);
+}
+
+/**
+ * Validates if a vehicle's last recorded position falls within the sovereign boundaries of Uganda.
+ */
+export function isVehicleInUganda(vehicle: { lastPosition?: { lat: number; lon: number } | null }): boolean {
+  if (!vehicle || !vehicle.lastPosition) return false;
+  return isWithinUganda(vehicle.lastPosition.lat, vehicle.lastPosition.lon);
+}
+
+/**
+ * Clamps coordinates to Uganda bounds if out-of-boundary drift occurs.
+ */
+export function clampToUgandaBounds(lat: number, lon: number): [number, number] {
+  const clampedLat = Math.min(Math.max(lat, UGANDA_BOUNDS.minLat + 0.05), UGANDA_BOUNDS.maxLat - 0.05);
+  const clampedLon = Math.min(Math.max(lon, UGANDA_BOUNDS.minLon + 0.05), UGANDA_BOUNDS.maxLon - 0.05);
+  return [clampedLat, clampedLon];
+}
+
+/**
  * Evaluates whether current East Africa Time (Africa/Kampala) falls within curfew hours.
  * Supports crossing midnight (e.g. 22:00 to 05:30).
  */
@@ -124,10 +231,12 @@ export const UGANDA_CORRIDORS: Record<string, CorridorWaypoint[]> = {
   ],
   // West Nile
   aru_corridor: [
-    { lat: 3.02, lon: 30.9, heading: 300, roadName: 'Arua City', speedLimit: 50 },
+    { lat: 3.02, lon: 30.9, heading: 300, roadName: 'Arua City Center', speedLimit: 50 },
+    { lat: 2.85, lon: 31.05, heading: 150, roadName: 'Arua-Nebbi Highway', speedLimit: 80 },
   ],
   arua_corridor: [
-    { lat: 3.02, lon: 30.9, heading: 300, roadName: 'Arua City', speedLimit: 50 },
+    { lat: 3.02, lon: 30.9, heading: 300, roadName: 'Arua City Center', speedLimit: 50 },
+    { lat: 2.85, lon: 31.05, heading: 150, roadName: 'Arua-Nebbi Highway', speedLimit: 80 },
   ],
 };
 

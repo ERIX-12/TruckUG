@@ -14,7 +14,7 @@ export const PlateTag: React.FC<PlateTagProps> = ({ plate, size = 'md', classNam
   };
 
   return (
-    <div
+    <span
       className={`inline-flex items-center gap-1.5 font-mono font-bold tracking-wider rounded bg-[#F2B705] text-[#1A1500] border-[#14181F] shadow-sm select-none ${sizeClasses[size]} ${className}`}
       title={`Uganda Vehicle Registration: ${plate}`}
     >
@@ -22,6 +22,6 @@ export const PlateTag: React.FC<PlateTagProps> = ({ plate, size = 'md', classNam
         UG
       </span>
       <span>{plate}</span>
-    </div>
+    </span>
   );
 };

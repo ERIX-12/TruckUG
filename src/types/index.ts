@@ -1,7 +1,7 @@
 export type Role = 'owner' | 'fleet_manager' | 'agency' | 'admin';
 
 export type VehicleStatus = 'active' | 'stolen' | 'recovered';
-export type VehicleCategory = 'private' | 'commercial' | 'public';
+export type VehicleCategory = 'private' | 'commercial' | 'public' | 'police';
 
 export interface Vehicle {
   id: string;
@@ -23,6 +23,37 @@ export interface Vehicle {
   ignition: boolean;
   deviceImei: string;
   deviceStatus: 'online' | 'offline' | 'idle';
+  stolenFrom?: string;
+  originAddress?: string;
+  topSpeedKph?: number;
+  isPatrol?: boolean;
+  callsign?: string;
+  assignedDivision?: string;
+  officerInCharge?: string;
+  patrolUnitType?: 'flying_squad' | 'highway_patrol' | '999_response' | 'cid_interceptor' | 'station_qrf';
+  isPoliceStation?: boolean;
+  stationName?: string;
+  stationCode?: string;
+  jurisdictionSector?: string;
+  dispatchReadiness?: 'ready' | 'deployed' | 'standby';
+  squadCount?: number;
+}
+
+export interface InterceptDispatchOrder {
+  id: string;
+  targetVehicleId: string;
+  targetPlate: string;
+  targetAddress: string;
+  patrolVehicleId: string;
+  patrolPlate: string;
+  patrolCallsign: string;
+  officerInCharge: string;
+  distanceKm: number;
+  etaMinutes: number;
+  dispatchedAt: string;
+  dispatchedBy: string;
+  reason: string;
+  status: 'dispatched' | 'en_route' | 'intercepted' | 'cancelled';
 }
 
 export interface Position {
@@ -45,6 +76,7 @@ export type AlertKind =
   | 'geofence_exit'
   | 'curfew'
   | 'speed'
+  | 'harsh_braking'
   | 'device_offline'
   | 'low_battery';
 
@@ -64,7 +96,7 @@ export interface Alert {
   lon?: number;
   locationName?: string;
   state: AlertState;
-  payload: {
+  payload?: {
     cameraName?: string;
     cameraId?: string;
     confidence?: number;
@@ -73,6 +105,7 @@ export interface Alert {
     geofenceName?: string;
     snapshotUrl?: string;
     details?: string;
+    decelerationG?: number;
   };
 }
 

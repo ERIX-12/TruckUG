@@ -34,8 +34,8 @@ export const ConfirmStolenModal: React.FC<ConfirmStolenModalProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs animate-in fade-in duration-150">
-      <div className="relative w-full max-w-md rounded-xl bg-white dark:bg-[#181C25] border border-red-200 dark:border-red-950 shadow-2xl p-6 text-gray-900 dark:text-gray-100">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/60 backdrop-blur-xs animate-in fade-in duration-150">
+      <div className="relative w-full max-w-md max-h-[calc(100vh-32px)] overflow-y-auto rounded-xl bg-white dark:bg-[#181C25] border border-red-200 dark:border-red-950 shadow-2xl p-4 sm:p-6 text-gray-900 dark:text-gray-100">
         <button
           onClick={onClose}
           className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 p-1"
@@ -51,15 +51,15 @@ export const ConfirmStolenModal: React.FC<ConfirmStolenModalProps> = ({
             <h3 className="text-xl font-bold font-heading uppercase tracking-wide">
               Initiate Stolen Vehicle Protocol
             </h3>
-            <p className="text-xs text-red-600/80 dark:text-red-400/80 font-medium">
+            <div className="text-xs text-red-600/80 dark:text-red-400/80 font-medium">
               High-priority enforcement alert
-            </p>
+            </div>
           </div>
         </div>
 
-        <p className="text-sm text-gray-600 dark:text-gray-300 mb-4 leading-relaxed">
+        <div className="text-sm text-gray-600 dark:text-gray-300 mb-4 leading-relaxed">
           Reporting vehicle <PlateTag plate={plate} size="sm" /> as stolen will immediately:
-        </p>
+        </div>
 
         <ul className="text-xs space-y-2 mb-4 bg-red-50 dark:bg-red-950/40 border border-red-200 dark:border-red-900/50 rounded-lg p-3 text-gray-700 dark:text-gray-300">
           <li className="flex items-start gap-2">
@@ -91,10 +91,10 @@ export const ConfirmStolenModal: React.FC<ConfirmStolenModalProps> = ({
             className="w-full px-3 py-2 border rounded-md font-mono text-center font-bold tracking-wider uppercase text-base bg-white dark:bg-[#0F1218] border-gray-300 dark:border-gray-700 focus:outline-hidden focus:ring-2 focus:ring-red-500 focus:border-red-500"
           />
           {error && (
-            <p className="text-xs text-red-600 mt-1 flex items-center gap-1">
+            <div className="text-xs text-red-600 mt-1 flex items-center gap-1">
               <AlertTriangle className="w-3.5 h-3.5" />
               Plate does not match. Please enter exactly {plate}.
-            </p>
+            </div>
           )}
         </div>
 

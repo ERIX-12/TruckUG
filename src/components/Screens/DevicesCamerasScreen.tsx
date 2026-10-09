@@ -77,7 +77,7 @@ export const DevicesCamerasScreen: React.FC<DevicesCamerasScreenProps> = ({
   };
 
   return (
-    <div className="flex-1 overflow-y-auto p-4 sm:p-6 bg-gray-50 dark:bg-[#0F1218] text-gray-900 dark:text-gray-100 select-none">
+    <div className="flex-1 overflow-y-auto p-4 sm:p-6 pb-24 sm:pb-6 bg-gray-50 dark:bg-[#0F1218] text-gray-900 dark:text-gray-100 select-none">
       <div className="max-w-6xl mx-auto space-y-4">
         {/* Header */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-3 border-b border-gray-200 dark:border-gray-800 gap-2">
@@ -258,8 +258,8 @@ export const DevicesCamerasScreen: React.FC<DevicesCamerasScreenProps> = ({
 
         {/* Devices Table */}
         {activeTab === 'devices' && (
-          <div className="bg-white dark:bg-[#181C25] border border-gray-200 dark:border-gray-800 rounded-xl overflow-hidden shadow-xs">
-            <table className="w-full text-left text-xs">
+          <div className="bg-white dark:bg-[#181C25] border border-gray-200 dark:border-gray-800 rounded-xl overflow-x-auto shadow-xs">
+            <table className="w-full text-left text-xs min-w-[620px]">
               <thead className="bg-gray-50 dark:bg-[#13161D] border-b border-gray-200 dark:border-gray-800 font-bold uppercase text-gray-500 text-[10px]">
                 <tr>
                   <th className="py-3 px-4">IMEI / Identifier</th>
@@ -307,8 +307,8 @@ export const DevicesCamerasScreen: React.FC<DevicesCamerasScreenProps> = ({
 
         {/* Cameras Table */}
         {activeTab === 'cameras' && (
-          <div className="bg-white dark:bg-[#181C25] border border-gray-200 dark:border-gray-800 rounded-xl overflow-hidden shadow-xs">
-            <table className="w-full text-left text-xs">
+          <div className="bg-white dark:bg-[#181C25] border border-gray-200 dark:border-gray-800 rounded-xl overflow-x-auto shadow-xs">
+            <table className="w-full text-left text-xs min-w-[550px]">
               <thead className="bg-gray-50 dark:bg-[#13161D] border-b border-gray-200 dark:border-gray-800 font-bold uppercase text-gray-500 text-[10px]">
                 <tr>
                   <th className="py-3 px-4">Camera Node Location</th>

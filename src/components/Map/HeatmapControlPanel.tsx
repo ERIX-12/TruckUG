@@ -43,7 +43,7 @@ export const HeatmapControlPanel: React.FC<HeatmapControlPanelProps> = ({
   };
 
   return (
-    <div className="absolute top-14 left-3 z-30 w-80 rounded-xl bg-white/95 dark:bg-[#181C25]/95 backdrop-blur-md border border-gray-200 dark:border-gray-800 shadow-xl p-4 text-gray-900 dark:text-gray-100 text-xs select-none animate-in fade-in slide-in-from-top-2 duration-150">
+    <div className="absolute top-14 left-2.5 z-30 w-80 max-w-[calc(100vw-20px)] max-h-[calc(100vh-140px)] overflow-y-auto rounded-xl bg-white/95 dark:bg-[#181C25]/95 backdrop-blur-md border border-gray-200 dark:border-gray-800 shadow-xl p-3.5 sm:p-4 text-gray-900 dark:text-gray-100 text-xs select-none animate-in fade-in slide-in-from-top-2 duration-150">
       {/* Title */}
       <div className="flex items-center justify-between pb-2 border-b border-gray-200 dark:border-gray-800 mb-3">
         <div className="flex items-center gap-2">

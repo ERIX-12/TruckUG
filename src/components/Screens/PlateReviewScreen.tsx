@@ -26,7 +26,10 @@ export const PlateReviewScreen: React.FC<PlateReviewScreenProps> = ({
 }) => {
   const pendingItems = sightings.filter((s) => s.reviewState === 'pending');
   const [currentIndex, setCurrentIndex] = useState(0);
-  const currentItem = pendingItems[currentIndex];
+
+  // Clamp index within valid bounds when items are processed
+  const safeIndex = pendingItems.length > 0 ? Math.min(currentIndex, pendingItems.length - 1) : 0;
+  const currentItem = pendingItems[safeIndex];
   const [editedPlate, setEditedPlate] = useState(currentItem?.plateRaw || '');
 
   // Keep edited plate in sync when current item changes
@@ -34,7 +37,14 @@ export const PlateReviewScreen: React.FC<PlateReviewScreenProps> = ({
     if (currentItem) {
       setEditedPlate(currentItem.plateRaw);
     }
-  }, [currentIndex, currentItem]);
+  }, [safeIndex, currentItem?.id, currentItem?.plateRaw]);
+
+  // Adjust index if out of bounds
+  useEffect(() => {
+    if (currentIndex >= pendingItems.length && pendingItems.length > 0) {
+      setCurrentIndex(Math.max(0, pendingItems.length - 1));
+    }
+  }, [pendingItems.length, currentIndex]);
 
   // Keyboard shortcuts C, R, S
   useEffect(() => {
@@ -64,7 +74,7 @@ export const PlateReviewScreen: React.FC<PlateReviewScreenProps> = ({
   };
 
   return (
-    <div className="flex-1 overflow-y-auto p-4 sm:p-6 bg-gray-50 dark:bg-[#0F1218] text-gray-900 dark:text-gray-100 select-none">
+    <div className="flex-1 overflow-y-auto p-4 sm:p-6 pb-24 sm:pb-6 bg-gray-50 dark:bg-[#0F1218] text-gray-900 dark:text-gray-100 select-none">
       <div className="max-w-4xl mx-auto space-y-4">
         {/* Header */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-3 border-b border-gray-200 dark:border-gray-800 gap-2">
@@ -78,7 +88,7 @@ export const PlateReviewScreen: React.FC<PlateReviewScreenProps> = ({
             </p>
           </div>
 
-          <div className="flex items-center gap-2 bg-white dark:bg-[#181C25] border border-gray-200 dark:border-gray-800 px-3 py-1.5 rounded-lg text-xs font-mono">
+          <div className="hidden sm:flex items-center gap-2 bg-white dark:bg-[#181C25] border border-gray-200 dark:border-gray-800 px-3 py-1.5 rounded-lg text-xs font-mono">
             <Keyboard className="w-4 h-4 text-gray-400" />
             <span className="text-gray-600 dark:text-gray-300">
               Shortcuts: <kbd className="px-1.5 py-0.5 rounded bg-gray-100 dark:bg-gray-800 font-bold border">C</kbd> Confirm,{' '}
